@@ -10,7 +10,7 @@ import { Search } from "lucide-react";
 type ProductFilterProps = {
   categories: string[];
   onFilterChange: (filters: {
-    searchTerm?: string;
+    search: string;
     category: string;
     price?: {
       gte: number;
@@ -27,34 +27,33 @@ export default function ProductFilter({ categories, onFilterChange }: ProductFil
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    onFilterChange({ searchTerm: value, category: selectedCategory });
+    onFilterChange({ search: value, category: selectedCategory });
   };
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
-    onFilterChange({ searchTerm, category: value });
+    onFilterChange({ search: searchTerm, category: value });
   };
 
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const min = parseInt(e.target.value) || 0;
     const newRange: [number, number] = [min, priceRange[1]];
     setPriceRange(newRange);
-    onFilterChange({ searchTerm, category: selectedCategory, price: {gte: newRange[0], lte: newRange[1]} });
+    onFilterChange({ search: searchTerm, category: selectedCategory, price: {gte: newRange[0], lte: newRange[1]} });
   };
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const max = parseInt(e.target.value) || 0;
     const newRange: [number, number] = [priceRange[0], max];
     setPriceRange(newRange);
-    console.log("newRange", newRange)
-    onFilterChange({ searchTerm, category: selectedCategory, price: {gte: newRange[0], lte: newRange[1]} });
+    onFilterChange({ search: searchTerm, category: selectedCategory, price: {gte: newRange[0], lte: newRange[1]} });
   };
 
   const handleReset = () => {
     setSearchTerm("");
     setSelectedCategory("");
     setPriceRange([0, 2000]);
-    onFilterChange({ searchTerm: "", category: "", price: {gte: 0, lte: 2000} });
+    onFilterChange({ search: "", category: "", price: {gte: 0, lte: 2000} });
   };
 
   return (

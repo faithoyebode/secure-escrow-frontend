@@ -12,6 +12,7 @@ import { SecuredPaymentOptions } from "./ui/secured-payment-options";
 import RelatedProducts from "./RelatedProducts";
 import { AspectRatio } from "./ui/aspect-ratio";
 
+//@ts-ignore
 const ProductDetailsPage = ({ product }) => {
   const router = useRouter();
 

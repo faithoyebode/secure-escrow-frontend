@@ -28,7 +28,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLoading(true);
     setError(null);
     try {
-      const fetchedProducts = await productService.getAllProducts(category, search);
+      const fetchedProducts = await productService.getAllProducts({category, search});
       setProducts(fetchedProducts);
     } catch (err) {
       console.error("Failed to load products:", err);

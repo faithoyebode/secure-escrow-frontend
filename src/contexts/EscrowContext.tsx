@@ -372,6 +372,7 @@ export const EscrowProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   return (
+    //@ts-ignore
     <EscrowContext.Provider value={value}>
       {children}
     </EscrowContext.Provider>

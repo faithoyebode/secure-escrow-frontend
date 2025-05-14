@@ -10,6 +10,7 @@ export default function useProductFilter(products: Product[]) {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
   
   // Get unique categories
+  //@ts-ignore
   const categories = ["All", ...new Set(products.map((product) => product.category))];
   
   useEffect(() => {

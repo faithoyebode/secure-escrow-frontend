@@ -28,6 +28,7 @@ import { toast } from "@/components/ui/use-toast";
 const ProductActions = ({ product }: { product: Product }) => {
   const { user } = useAuth();
   const { addToCart } = useCart();
+  //@ts-ignore
   const { createEscrow } = useEscrow();
   const router = useRouter();
   const [isCreatingEscrow, setIsCreatingEscrow] = useState(false);

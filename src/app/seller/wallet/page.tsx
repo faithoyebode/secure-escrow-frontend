@@ -103,7 +103,7 @@ const SellerWalletPage = () => {
                           #{transaction.id.substring(6)}
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate">
-                          {transaction.productName}
+                          {/* {transaction.productName} */}
                         </TableCell>
                         <TableCell>
                           {formatDate(transaction.updatedAt)}

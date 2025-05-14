@@ -74,7 +74,7 @@ const AdminDisputesPage = () => {
                           {dispute.userName} ({dispute.raisedBy})
                         </TableCell>
                         <TableCell>
-                          {escrow ? escrow.productName : "Unknown"}
+                          {escrow ? `#${escrow.id.substring(0, 6)}` : "Unknown"}
                         </TableCell>
                         <TableCell>{formatDate(dispute.createdAt)}</TableCell>
                         <TableCell>
@@ -138,7 +138,7 @@ const AdminDisputesPage = () => {
                           {dispute.userName} ({dispute.raisedBy})
                         </TableCell>
                         <TableCell>
-                          {escrow ? escrow.productName : "Unknown"}
+                          {escrow ? `#${escrow.id.substring(0, 6)}` : "Unknown"}
                         </TableCell>
                         <TableCell>{formatDate(dispute.createdAt)}</TableCell>
                         <TableCell>

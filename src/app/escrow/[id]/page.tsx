@@ -1,5 +1,4 @@
-
-"use client"
+"use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,7 +12,14 @@ import DisputeForm from "@/components/DisputeForm";
 import DisputeDetails from "@/components/DisputeDetails";
 import DisputeComments from "@/components/DisputeComments";
 import SellerWallet from "@/components/SellerWallet";
-import { Calendar, Clock, AlertTriangle, Loader2 } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  AlertTriangle,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -45,29 +51,30 @@ const EscrowDetailsPage = () => {
   const [escrow, setEscrow] = useState<Escrow | null>(null);
   const [dispute, setDispute] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
   useEffect(() => {
     const fetchEscrowDetails = async () => {
       if (!id || !user) {
         toast({
-            title: "Authentication Required",
-            description: "Please log in to be able to access escrow page.",
-            variant: "destructive",
+          title: "Authentication Required",
+          description: "Please log in to be able to access escrow page.",
+          variant: "destructive",
         });
         navigate.push("/login");
         return;
       }
-      
+
       setLoading(true);
       try {
         // Fetch escrow details
         const escrowDetails = await escrowService.getEscrow(id as string);
         setEscrow(escrowDetails);
-        
+
         // Try to fetch any dispute for this escrow
         try {
           const disputes = await disputeService.getUserDisputes();
-          const relatedDispute = disputes.find(d => d.escrowId === id);
+          const relatedDispute = disputes.find((d) => d.escrowId === id);
           if (relatedDispute) {
             setDispute(relatedDispute);
           }
@@ -109,21 +116,24 @@ const EscrowDetailsPage = () => {
   const isAdmin = user?.role === "admin";
 
   // Check if escrow is expired or close to expiring
-  const isExpired = escrow.expiryDate && new Date(escrow.expiryDate) < new Date();
-  const isCloseToExpiry = escrow.expiryDate && 
-    new Date(escrow.expiryDate) > new Date() && 
-    new Date(escrow.expiryDate).getTime() - new Date().getTime() < 3 * 24 * 60 * 60 * 1000; // 3 days
+  const isExpired =
+    escrow.expiryDate && new Date(escrow.expiryDate) < new Date();
+  const isCloseToExpiry =
+    escrow.expiryDate &&
+    new Date(escrow.expiryDate) > new Date() &&
+    new Date(escrow.expiryDate).getTime() - new Date().getTime() <
+      3 * 24 * 60 * 60 * 1000; // 3 days
 
   // Calculate days remaining
   const getDaysRemaining = () => {
     if (!escrow.expiryDate) return null;
-    
+
     const expiryDate = new Date(escrow.expiryDate);
     const now = new Date();
-    
+
     // If expired, return 0
     if (expiryDate < now) return 0;
-    
+
     const timeDiff = expiryDate.getTime() - now.getTime();
     return Math.ceil(timeDiff / (1000 * 3600 * 24)); // Convert ms to days and round up
   };
@@ -133,7 +143,9 @@ const EscrowDetailsPage = () => {
   const handleUpdateStatus = async (status: TransactionStatus) => {
     setIsUpdating(true);
     try {
-      const updatedEscrow = await escrowService.updateEscrowStatus(escrow.id, { status });
+      const updatedEscrow = await escrowService.updateEscrowStatus(escrow.id, {
+        status,
+      });
       setEscrow(updatedEscrow);
       await refreshEscrows();
     } catch (error) {
@@ -146,7 +158,9 @@ const EscrowDetailsPage = () => {
   const handleExtendExpiry = async () => {
     setIsUpdating(true);
     try {
-      const updatedEscrow = await escrowService.updateEscrowExpiry(escrow.id, parseInt(extensionDays));
+      const updatedEscrow = await escrowService.updateEscrowExpiry(escrow.id, {
+        days: parseInt(extensionDays),
+      });
       setEscrow(updatedEscrow);
       await refreshEscrows();
       setShowExtendDialog(false);
@@ -156,6 +170,12 @@ const EscrowDetailsPage = () => {
       setIsUpdating(false);
     }
   };
+
+  const primaryProduct =
+    escrow.products && escrow.products.length > 0 ? escrow.products[0] : null;
+
+  const totalProducts = escrow.products ? escrow.products.length : 0;
+  const hasMultipleProducts = totalProducts > 1;
 
   const renderActions = () => {
     if (escrow.status === TransactionStatus.DISPUTED) {
@@ -171,7 +191,9 @@ const EscrowDetailsPage = () => {
               disabled={isUpdating}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isUpdating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Release Payment
             </Button>
           )}
@@ -200,11 +222,13 @@ const EscrowDetailsPage = () => {
               disabled={isUpdating}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isUpdating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Confirm Delivery
             </Button>
           )}
-          
+
           {(escrow.status === TransactionStatus.PENDING ||
             escrow.status === TransactionStatus.AWAITING_DELIVERY ||
             escrow.status === TransactionStatus.DELIVERED) && (
@@ -217,7 +241,7 @@ const EscrowDetailsPage = () => {
               Raise Dispute
             </Button>
           )}
-          
+
           {isSeller && (
             <div className="mt-6">
               <SellerWallet />
@@ -230,18 +254,18 @@ const EscrowDetailsPage = () => {
     if (isAdmin) {
       return (
         <div className="space-y-4">
-          {escrow.status !== TransactionStatus.COMPLETED && 
-           escrow.status !== TransactionStatus.CANCELED && 
-           escrow.status !== TransactionStatus.EXPIRED && (
-            <Button
-              variant="outline"
-              onClick={() => setShowExtendDialog(true)}
-              disabled={isUpdating}
-              className="w-full"
-            >
-              Extend Escrow Period
-            </Button>
-          )}
+          {escrow.status !== TransactionStatus.COMPLETED &&
+            escrow.status !== TransactionStatus.CANCELED &&
+            escrow.status !== TransactionStatus.EXPIRED && (
+              <Button
+                variant="outline"
+                onClick={() => setShowExtendDialog(true)}
+                disabled={isUpdating}
+                className="w-full"
+              >
+                Extend Escrow Period
+              </Button>
+            )}
         </div>
       );
     }
@@ -257,7 +281,11 @@ const EscrowDetailsPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Button variant="outline" onClick={() => navigate.push("/escrow")} className="mb-6">
+      <Button
+        variant="outline"
+        onClick={() => navigate.push("/escrow")}
+        className="mb-6"
+      >
         Back to Transactions
       </Button>
 
@@ -270,7 +298,9 @@ const EscrowDetailsPage = () => {
                   Transaction #{escrow.id.substring(0, 8)}...
                 </CardTitle>
                 <Badge
-                  variant={escrow.status === "completed" ? "default" : "secondary"}
+                  variant={
+                    escrow.status === "completed" ? "default" : "secondary"
+                  }
                   className="text-sm"
                 >
                   {formatStatus(escrow.status)}
@@ -278,19 +308,86 @@ const EscrowDetailsPage = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center space-x-4">
+              {/* <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden">
                   <img
-                    src={escrow.productImage}
+                    src={escrow.products?.[0].productImage}
                     alt={escrow.productName}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold">{escrow.productName}</h2>
+                  <h2 className="text-xl font-semibold"></h2>
                   <p className="text-gray-500">Amount: {formatCurrency(escrow.amount)}</p>
                 </div>
-              </div>
+              </div> */}
+
+              {primaryProduct && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 rounded-md overflow-hidden">
+                      <img
+                        src={primaryProduct.productImage}
+                        alt={primaryProduct.productName}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">
+                        {primaryProduct.productName}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {formatCurrency(primaryProduct.price)} x{" "}
+                        {primaryProduct.quantity}
+                      </p>
+                      {hasMultipleProducts && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-1 h-8 p-0 text-sm text-blue-600"
+                          onClick={() => setShowAllProducts(!showAllProducts)}
+                        >
+                          {showAllProducts ? (
+                            <>
+                              Hide <ChevronUp className="h-3 w-3 ml-1" />
+                            </>
+                          ) : (
+                            <>
+                              +{totalProducts - 1} more items{" "}
+                              <ChevronDown className="h-3 w-3 ml-1" />
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Additional products if expanded */}
+                  {showAllProducts &&
+                    escrow.products.slice(1).map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex items-center space-x-4 border-t pt-3"
+                      >
+                        <div className="w-14 h-14 rounded-md overflow-hidden">
+                          <img
+                            src={product.productImage}
+                            alt={product.productName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm">
+                            {product.productName}
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            {formatCurrency(product.price)} x {product.quantity}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -302,21 +399,29 @@ const EscrowDetailsPage = () => {
                   <p>{escrow.sellerName}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Created Date</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Created Date
+                  </h3>
                   <p>{formatDate(escrow.createdAt)}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Last Updated</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Last Updated
+                  </h3>
                   <p>{formatDate(escrow.updatedAt)}</p>
                 </div>
               </div>
 
               {escrow.expiryDate && (
-                <div className={`flex items-center p-4 rounded-md ${
-                  isExpired ? 'bg-red-50 border border-red-200' : 
-                  isCloseToExpiry ? 'bg-amber-50 border border-amber-200' : 
-                  'bg-blue-50 border border-blue-200'
-                }`}>
+                <div
+                  className={`flex items-center p-4 rounded-md ${
+                    isExpired
+                      ? "bg-red-50 border border-red-200"
+                      : isCloseToExpiry
+                      ? "bg-amber-50 border border-amber-200"
+                      : "bg-blue-50 border border-blue-200"
+                  }`}
+                >
                   {isExpired ? (
                     <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
                   ) : isCloseToExpiry ? (
@@ -325,28 +430,44 @@ const EscrowDetailsPage = () => {
                     <Calendar className="h-5 w-5 text-blue-500 mr-2" />
                   )}
                   <div>
-                    <p className={`font-medium ${
-                      isExpired ? 'text-red-700' : 
-                      isCloseToExpiry ? 'text-amber-700' : 
-                      'text-blue-700'
-                    }`}>
-                      {isExpired ? 'Escrow Expired' : 
-                       isCloseToExpiry ? 'Escrow Expiring Soon' : 
-                       'Escrow Expiry Date'}
+                    <p
+                      className={`font-medium ${
+                        isExpired
+                          ? "text-red-700"
+                          : isCloseToExpiry
+                          ? "text-amber-700"
+                          : "text-blue-700"
+                      }`}
+                    >
+                      {isExpired
+                        ? "Escrow Expired"
+                        : isCloseToExpiry
+                        ? "Escrow Expiring Soon"
+                        : "Escrow Expiry Date"}
                     </p>
-                    <p className={`text-sm ${
-                      isExpired ? 'text-red-600' : 
-                      isCloseToExpiry ? 'text-amber-600' : 
-                      'text-blue-600'
-                    }`}>
+                    <p
+                      className={`text-sm ${
+                        isExpired
+                          ? "text-red-600"
+                          : isCloseToExpiry
+                          ? "text-amber-600"
+                          : "text-blue-600"
+                      }`}
+                    >
                       {isExpired ? (
                         `Expired on ${formatDate(escrow.expiryDate)}`
                       ) : (
                         <>
-                          {formatDate(escrow.expiryDate)} 
+                          {formatDate(escrow.expiryDate)}
                           {daysRemaining !== null && (
                             <span className="ml-1 font-medium">
-                              ({daysRemaining === 0 ? "Today" : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining`})
+                              (
+                              {daysRemaining === 0
+                                ? "Today"
+                                : `${daysRemaining} day${
+                                    daysRemaining !== 1 ? "s" : ""
+                                  } remaining`}
+                              )
                             </span>
                           )}
                         </>
@@ -386,9 +507,11 @@ const EscrowDetailsPage = () => {
                   escrowId={escrow.id}
                   onSuccess={async () => {
                     const disputes = await disputeService.getUserDisputes();
-                    const relatedDispute = disputes.find(d => d.escrowId === id);
+                    const relatedDispute = disputes.find(
+                      (d) => d.escrowId === id
+                    );
                     if (relatedDispute) {
-                        setDispute(relatedDispute);
+                      setDispute(relatedDispute);
                     }
                   }}
                 />
@@ -509,7 +632,7 @@ const EscrowDetailsPage = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {escrow.status === TransactionStatus.EXPIRED && (
                   <div className="relative">
                     <div className="absolute -left-[1.45rem] top-1 w-3 h-3 rounded-full bg-red-500"></div>
@@ -526,17 +649,18 @@ const EscrowDetailsPage = () => {
           </Card>
         </div>
       </div>
-      
+
       {/* Extend Escrow Dialog */}
       <Dialog open={showExtendDialog} onOpenChange={setShowExtendDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Extend Escrow Period</DialogTitle>
             <DialogDescription>
-              You can extend the escrow period to give more time for the transaction to complete.
+              You can extend the escrow period to give more time for the
+              transaction to complete.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Extend by:</label>
@@ -552,26 +676,35 @@ const EscrowDetailsPage = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="rounded-md bg-blue-50 p-4">
               <div className="flex items-start">
                 <Calendar className="h-5 w-5 text-blue-500 mt-0.5 mr-2" />
                 <div>
-                  <h3 className="text-sm font-medium text-blue-800">Current expiry date</h3>
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Current expiry date
+                  </h3>
                   <p className="text-sm text-blue-700 mt-1">
-                    {escrow.expiryDate ? formatDate(escrow.expiryDate) : "No expiry date set"}
+                    {escrow.expiryDate
+                      ? formatDate(escrow.expiryDate)
+                      : "No expiry date set"}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowExtendDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowExtendDialog(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleExtendExpiry} disabled={isUpdating}>
-              {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isUpdating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               {isUpdating ? "Processing..." : "Extend Period"}
             </Button>
           </DialogFooter>
